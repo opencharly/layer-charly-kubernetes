@@ -22,7 +22,8 @@ check-k8s-skill:
         family: kubernetes
         owner: charly-kubernetes
         description: |-
-            Kubernetes cluster-probe declarative check verb — the `kube:` check verb (nodes, pods, ingress, storage class, addon health, apply/delete, and arbitrary resource GETs) served out-of-process by the candy/plugin-kube plugin (vendored client-go; no external kubectl required).
+            Kubernetes cluster-probe declarative check verb — the `kube:` check verb (nodes, pods, ingress, storage class, addon health, apply/delete, arbitrary resource GETs) served out-of-process by candy/plugin-kube (vendored client-go; no external kubectl).
+
         triggers:
             - "the `kube:` check verb / Kubernetes cluster probing from a candy/box plan (out-of-process plugin; nodes, pods, ingress, wait-ready, storageclass, addons, apply/delete, raw resource GETs)"
         content: |
@@ -286,7 +287,8 @@ helm-skill:
         family: kubernetes
         owner: charly-kubernetes
         description: |-
-            The helm words — the `step:helm-release` install step (a `helm upgrade --install` performed IN-VENUE, returning a `helm uninstall` ReverseOp) and the `verb:helm` declarative release-status assertion, both served out-of-process by candy/plugin-helm; plus the `helm_charts:` deploy field the k8sgen emitter renders as a kustomize `helmCharts:` transformer entry.
+            The helm words — the `step:helm-release` install step (a `helm upgrade --install` performed IN-VENUE, returning a `helm uninstall` ReverseOp) and the `verb:helm` declarative release-status assertion, both served out-of-process by candy/plugin-helm; plus the `helm_charts:` deploy field the k8sgen emitter renders.
+
         triggers:
             - "`step:helm-release` / `verb:helm` / installing a Helm chart from a candy plan / the `helm_charts:` deploy field and its kustomize `helmCharts:` emission / the `--enable-helm` apply path"
         content: |
@@ -577,7 +579,8 @@ kubernetes-skill:
         family: kubernetes
         owner: charly-kubernetes
         description: |-
-            MUST be invoked before any work involving: `charly fleet add`, `charly fleet from-box`, Kustomize manifest generation, cluster profiles, Kubernetes deployments, `deploy:` block in deploy spec, or OCI-label capabilities.
+            `charly fleet add`, `charly fleet from-box`, Kustomize manifest generation, cluster profiles, Kubernetes deployments, `deploy:` block in deploy spec, or OCI-label capabilities.
+
         content: |
             # Kubernetes — Deploying OpenCharly Images to Kubernetes Clusters
 
