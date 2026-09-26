@@ -45,6 +45,13 @@ check-k8s-skill:
             The cluster-probe verb is spelled `kube`; the deploy KIND is spelled
             `kubernetes` (`kind: kubernetes`, a `kubernetes:` entity or cross-ref).
 
+            The **local-cluster sibling** is `kindcluster` (`kind: kindcluster`, a
+            `kindcluster:` entity): kind provisions the cluster as node containers on the
+            operator's own engine (docker / rootless podman / rootless nerdctl) instead of
+            a VM. It is the SAME `kube:` probe surface — a `kindcluster:` deploy writes a
+            `kind-<cluster>` kubeconfig context, which a `kube:` step addresses with
+            `kube_context:`. See `/charly-kubernetes:kind`.
+
             ## Method surface
 
             Every method below is the `kube:` map's `method:` (or the scalar value for a bare
@@ -589,6 +596,8 @@ kubernetes-skill:
             OpenCharly can deploy built images to a Kubernetes cluster by emitting a Kustomize `base/` + `overlays/` tree. The deployment schema stays **target-agnostic** — the deploy node describes *what the workload needs* (kind, replica, resources, exposure, storage, probes); a per-cluster **`kind: kubernetes` cluster template** (the `kubernetes:` entity, which absorbed the former cluster-profile file) supplies the Kubernetes-specific knobs (storage class, ingress class, cert issuer, secret backend).
 
             Every box runtime contract is baked into OCI labels at build time, so **a Kubernetes deploy is possible without access to `charly.yml`** — the `charly fleet from-box` verb reads capabilities from the pushed image alone.
+
+            A **local-cluster sibling** reuses this same Kustomize + `kubectl` machinery: `kindcluster` (`kind: kindcluster`) runs kind on the operator's engine and is served by the `deploy:kindcluster` provider beside `deploy:kubernetes` in `candy/plugin-kube`. See `/charly-kubernetes:kind`.
 
             ## Quick reference
 
