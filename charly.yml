@@ -95,7 +95,7 @@ check-k8s-skill:
             4. None given → current-context of the default kubeconfig (matches
                `kubectl` with no flags).
 
-            `charly fleet add vm:k3s-srv` (or any deploy whose layers include
+            `charly deploy add vm:k3s-srv` (or any deploy whose layers include
             `k3s-server`) provisions a cluster whose kubeconfig is merged into the
             default kubeconfig under a context named after the deploy (the plugin-side
             `k3s-post-provision` finalization dispatched by `candy/plugin-fleet`'s
@@ -281,7 +281,7 @@ check-k8s-skill:
               run), the plan-step vocabulary, and how the provider registry dispatches
               declarative verbs.
             - `/charly-kubernetes:kubernetes` — deploying images to a Kubernetes cluster
-              (`kind: kubernetes` cluster templates, Kustomize generation, `charly fleet`).
+              (`kind: kubernetes` cluster templates, Kustomize generation, `charly deploy`).
             - `/charly-internals:plugin` — the Provider model and the out-of-process
               plugin dispatch the `kube:` verb rides on.
             - `/charly-infrastructure:k3s` — the k3s-server / k3s-agent candies whose
@@ -351,29 +351,29 @@ helm-skill:
             ## The authoring law this surfaced: mutating installs live in a CANDY
 
             A bed's own plan runs **verify-only** (mutating steps skipped), and
-            `charly fleet add` lowers only **candy** plans' `run:` steps. So any
+            `charly deploy add` lowers only **candy** plans' `run:` steps. So any
             mutating install — the `helm-release` invocation itself, and any in-venue
             `kubectl wait` it depends on — MUST live in a candy's `run:` steps, never
             in the bed's own plan. Authoring the install into the bed produces a bed
             that passes while installing nothing.
 
             A second-order trap rides along: a `check:` step does **not** run during
-            `fleet add`, so the `k3s-server` candy's own node-ready check cannot gate
+            `deploy add`, so the `k3s-server` candy's own node-ready check cannot gate
             your install. An install candy waits for the node itself.
 
             **Two independent mechanisms decide when a step runs, and confusing them
             is the trap.**
 
-            First the step KEYWORD. `charly fleet add` lowers `run:` steps and
+            First the step KEYWORD. `charly deploy add` lowers `run:` steps and
             nothing else — `check:`, `agent-*:` and `include:` steps are never
             lowered, whatever `context:` they carry
             (`sdk/deploykit/install_build.go:694-697`, which drops non-`run:`
             keywords *before* it looks at context at all). So the `check:` step in
-            the example below does not execute during `fleet add` **because it is a
+            the example below does not execute during `deploy add` **because it is a
             `check:` step** — not because of its context. Giving it
             `context: [deploy]` would not change that.
 
-            (This is about `fleet add` LOWERING. `context:` on a `check:` step is not
+            (This is about `deploy add` LOWERING. `context:` on a `check:` step is not
             inert in general — it selects which CHECK MODE the step runs in, which is
             a different walk entirely; see "Author the STEP `context: [runtime]`"
             under `verb:helm` below.)
@@ -485,7 +485,7 @@ helm-skill:
             **Author the STEP `context: [runtime]`, and understand that this is what
             makes it skip under `charly check box` — not the verb's EXEC nature.**
 
-            This does not contradict the `fleet add` rule above, and the two are worth
+            This does not contradict the `deploy add` rule above, and the two are worth
             holding apart: THERE, `context:` is irrelevant because a `check:` step is
             never lowered at all; HERE, `context:` is decisive because it selects the
             check mode the step is active in. Different walks, different questions.
@@ -584,7 +584,7 @@ kubernetes-skill:
         family: kubernetes
         owner: charly-kubernetes
         description: |-
-            `charly fleet add`, `charly fleet from-box`, Kustomize manifest generation, cluster profiles, Kubernetes deployments, `deploy:` block in deploy spec, or OCI-label capabilities.
+            `charly deploy add`, `charly deploy from-box`, Kustomize manifest generation, cluster profiles, Kubernetes deployments, `deploy:` block in deploy spec, or OCI-label capabilities.
 
         content: |
             # Kubernetes — Deploying OpenCharly Images to Kubernetes Clusters
@@ -593,7 +593,7 @@ kubernetes-skill:
 
             OpenCharly can deploy built images to a Kubernetes cluster by emitting a Kustomize `base/` + `overlays/` tree. The deployment schema stays **target-agnostic** — the deploy node describes *what the workload needs* (kind, replica, resources, exposure, storage, probes); a per-cluster **`kind: kubernetes` cluster template** (the `kubernetes:` entity, which absorbed the former cluster-profile file) supplies the Kubernetes-specific knobs (storage class, ingress class, cert issuer, secret backend).
 
-            Every box runtime contract is baked into OCI labels at build time, so **a Kubernetes deploy is possible without access to `charly.yml`** — the `charly fleet from-box` verb reads capabilities from the pushed image alone.
+            Every box runtime contract is baked into OCI labels at build time, so **a Kubernetes deploy is possible without access to `charly.yml`** — the `charly deploy from-box` verb reads capabilities from the pushed image alone.
 
             A **local-cluster sibling** reuses this same Kustomize + `kubectl` machinery: `kindcluster` (`kind: kindcluster`) runs kind on the operator's engine and is served by the `deploy:kindcluster` provider beside `deploy:kubernetes` in `candy/plugin-kube`. See `/charly-kubernetes:kind`.
 
@@ -601,11 +601,11 @@ kubernetes-skill:
 
             | Action | Command | Description |
             |---|---|---|
-            | Add Kubernetes deploy | `charly fleet add <name> <ref>` | Read BoxConfig + the deploy node + the `kind: kubernetes` cluster template; emit `.opencharly/k8s/<name>/` Kustomize tree |
-            | Source-less deploy | `charly fleet from-box <registry/name:tag> [name] --cluster <name>` | Deploy from OCI labels only — no `charly.yml` needed (see Part F.10) |
-            | Sync to cluster | `charly fleet sync <name>` | `kubectl apply -k .opencharly/k8s/<name>/overlays/default` |
-            | Show generated manifests | `charly fleet show <name>` | `kubectl kustomize …` — see what would apply |
-            | Delete Kubernetes deploy | `charly fleet del <name>` | Remove overlay dir; base stays if other instances reference it |
+            | Add Kubernetes deploy | `charly deploy add <name> <ref>` | Read BoxConfig + the deploy node + the `kind: kubernetes` cluster template; emit `.opencharly/k8s/<name>/` Kustomize tree |
+            | Source-less deploy | `charly deploy from-box <registry/name:tag> [name] --cluster <name>` | Deploy from OCI labels only — no `charly.yml` needed (see Part F.10) |
+            | Re-apply to cluster | `charly deploy add <name>` | Re-materialize the tree and `kubectl apply -k` it against the operator's kubeconfig — the apply IS the deploy (`candy/plugin-kube/deploy.go`) |
+            | Show generated manifests | `charly deploy show <name>` | `kubectl kustomize …` — see what would apply |
+            | Delete Kubernetes deploy | `charly deploy del <name>` | Remove overlay dir; base stays if other instances reference it |
 
             ## The three-layer model
 
@@ -725,7 +725,7 @@ kubernetes-skill:
                     └── kustomization.yaml       # namespace override + patches from deploy.patches:
             ```
 
-            Apply: `kubectl apply -k .opencharly/k8s/<name>/overlays/<instance>` (or `charly fleet sync <name>`).
+            Apply: `kubectl apply -k .opencharly/k8s/<name>/overlays/<instance>` (or re-run `charly deploy add <name>`).
 
             **Egress validation.** Every manifest is validated through `validateEgressValue`/`writeYAML`
             (candy/plugin-kube/materialize.go) before it
@@ -734,18 +734,18 @@ kubernetes-skill:
             `kustomization.yaml` against `#Kustomization`. A structurally-broken manifest fails
             deploy generation instead of reaching the cluster. Owned by `/charly-internals:egress`.
 
-            ## Source-less deploy — `charly fleet from-box`
+            ## Source-less deploy — `charly deploy from-box`
 
             Proves the self-contained image invariant: a deploy pipeline with **no access to `charly.yml`** can still produce a correct Kustomize tree.
 
             ```bash
             # On a machine that doesn't have the source repo:
-            charly fleet from-box quay.io/myorg/openclaw:v2 openclaw \
+            charly deploy from-box quay.io/myorg/openclaw:v2 openclaw \
                 --cluster production --namespace apps
             # Reads: OCI labels (capabilities) + the `production` kind:kubernetes cluster template
             #        + ~/.config/charly/charly.yml (if present, for per-machine overrides)
             # Emits: .opencharly/k8s/openclaw/base/ + overlays/default/
-            charly fleet sync openclaw                   # kubectl apply -k ...
+            charly deploy add openclaw                   # kubectl apply -k ...
             ```
 
             ## Relevant code
@@ -753,14 +753,14 @@ kubernetes-skill:
             - `spec/spec/cue_types_gen.go` (generated) — `KubernetesDeploy` (`KubernetesDeployConfig`, the deploy's `deploy:` deploy-knobs block: namespace / workload override / patches / raw; the former `charly/k8s_config.go` is DELETED, K-wave 2)
             - `spec/spec/cue_types_gen.go` (generated) — `KubernetesSpec` (the `kind: kubernetes` cluster template; absorbed the former `ClusterProfile` / `clusters/*.yaml`)
             - `candy/plugin-kube/preresolve.go` — the PLUGIN-side `deploy:kubernetes` preresolver (F6/FINAL-K5-unit-6a, relocated from the DELETED `charly/k8s_deploy_preresolve.go`). `target: kubernetes` is an EXTERNAL deploy substrate (F1): it resolves out-of-process to candy/plugin-kube's `deploy:kubernetes` provider (beside its `kube:` verb), NOT a compiled-in deploy target. The preresolver resolves the image Capabilities + the `kind: kubernetes` cluster template by self-loading the project PLUGIN-SIDE (`sdk/loaderkit.ResolveKubernetesEntityViaExecutor`, K-wave W3a A3-phase-2 — no HostBuild round trip remains for this lookup), runs `materializeKustomize` (`materialize.go`) — which InvokeProviders the compiled-in `verb:k8sgen`/`OpEmit` for the manifest docs and `verb:egress`/`OpValidate` to validate each one, entirely peer-to-peer, no host round trip — and ships the egress-validated overlay path in `DeployVenue.Substrate`; the plugin runs `kubectl --context <ctx> apply -k`. The user-facing surface (schema, cluster templates, Kustomize output) is unchanged. See `/charly-internals:install-plan` + `/charly-internals:plugin`.
-            - `charly/k8s_generate.go` / `host_build_k8s_generate.go` are DELETED — the former "k8s-generate-kustomize" HostBuild seam they served is retired (K5-A item 6): the Kustomize GENERATION now runs entirely inside `candy/plugin-kube/materialize.go` (see above), and `candy/plugin-fleet/deploy_from_box.go`'s `charly fleet from-box` path calls `materializeKustomize` the same way. The generator itself still lives in `candy/plugin-k8sgen/k8sgen.go`, reached over `verb:k8sgen` peer dispatch, not a core shim
+            - `charly/k8s_generate.go` / `host_build_k8s_generate.go` are DELETED — the former "k8s-generate-kustomize" HostBuild seam they served is retired (K5-A item 6): the Kustomize GENERATION now runs entirely inside `candy/plugin-kube/materialize.go` (see above), and `candy/plugin-fleet/deploy_from_box.go`'s `charly deploy from-box` path calls `materializeKustomize` the same way. The generator itself still lives in `candy/plugin-k8sgen/k8sgen.go`, reached over `verb:k8sgen` peer dispatch, not a core shim
             - `candy/plugin-k8sgen/` — the compiled-in Kustomize GENERATOR candy (M13): `k8sgen.go` (the ported workload/service/pvc/ingress/kustomization builders + the workload-kind heuristic + `GenerateTree`), serving `verb:k8sgen`/`OpEmit` over `spec.KubernetesGenInput` → `spec.KubernetesGenReply` manifest docs; no client-go (split from the heavy external plugin-kube so it resolves in the project-less from-box path)
-            - `candy/plugin-fleet/deploy_from_box.go` — the plugin-side `charly fleet from-box` Kubernetes path (`--cluster`), calling `materializeKustomize` the same way (`charly/fleet_from_box_cmd.go` is DELETED, K-wave 2 cone R2 — the pod path lives in `candy/plugin-fleet/from_box_pod.go`)
+            - `candy/plugin-fleet/deploy_from_box.go` — the plugin-side `charly deploy from-box` Kubernetes path (`--cluster`), calling `materializeKustomize` the same way (`charly/fleet_from_box_cmd.go` is DELETED, K-wave 2 cone R2 — the pod path lives in `candy/plugin-fleet/from_box_pod.go`)
             - `sdk/deploykit/capabilities.go` — `CapabilityLabelMap` + completeness check, over `spec.BoxMetadata` (`charly/capabilities.go`, this row's former citation, no longer exists — see `/charly-internals:capabilities`)
 
             ## Related skills
 
-            - `/charly-core:deploy` — unified `charly fleet add`/`del` verb; Kubernetes is one of the five deploy substrates
+            - `/charly-core:deploy` — unified `charly deploy add`/`del` verb; Kubernetes is one of the five deploy substrates
             - `/charly-internals:capabilities` — OCI label contract the Kubernetes generator reads from
             - `/charly-internals:install-plan` — shared IR across build + deploy targets
             - `/charly-internals:egress` — the CUE egress gate that validates every generated manifest before write (`#K8sObject` / `#Kustomization`)

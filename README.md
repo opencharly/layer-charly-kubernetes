@@ -7,7 +7,7 @@ The `charly-kubernetes` candy is a **concept candy**: it ships no install
 content and owns the `kubernetes` family of `skill:` entities. It currently
 carries three entities:
 
-- `kubernetes` — `charly fleet add`, `charly fleet from-box`, Kustomize manifest
+- `kubernetes` — `charly deploy add`, `charly deploy from-box`, Kustomize manifest
   generation, cluster profiles, Kubernetes deployments, the `deploy:` block in
   the deploy spec, and OCI-label capabilities.
 - `helm` — the helm words: the `step:helm-release` install step and the
