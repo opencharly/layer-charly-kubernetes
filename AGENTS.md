@@ -17,7 +17,7 @@ Canonical files:
 ## Load these skills first (R0)
 
 - `/charly-kubernetes:kubernetes` — the owning skill for the Kubernetes deploy
-  surface (`charly fleet add` / `from-box`, Kustomize, cluster profiles, the
+  surface (`charly deploy add` / `from-box`, Kustomize, cluster profiles, the
   `deploy:` block). Load before editing the `kubernetes-skill:` entity.
 - `/charly-kubernetes:helm` — the helm words (`step:helm-release`,
   `verb:helm`, `helm_charts:`). Load before editing the `helm-skill:` entity.
