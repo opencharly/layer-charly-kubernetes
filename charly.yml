@@ -1,44 +1,19 @@
 charly-kubernetes:
     candy:
         description: |-
-            Concept candy owning the charly-kubernetes kind-authoring skills (kubernetes schema + cluster probes). Owns its family's `skill:` kind entities (sibling nodes in this file) — the
-            the plugins→candies migration; candy/plugin-marketplace regenerates the marketplace
-            corpus (the standalone opencharly/marketplace repo) from them.
+            Drained concept candy — kept only so this repo still validates as a project while
+            it awaits retirement (opencharly/opencharly#600). It owns NO `skill:` entity any
+            more: under AGENTS.md Part II #5 the 3 `kubernetes` family skills moved,
+            byte-identically, to the repositories that hold the code, plugin or config each one
+            documents — `plugin-helm`, `plugin-kube`.
+            Nothing is authored here now.
         plan:
-            - run: this documentation-only candy ships no install content (it carries the family's skill/hook/marketplace entities); validate-satisfying no-op
+            - run: this documentation-only candy ships no install content (it carried the family's skill entities); validate-satisfying no-op
               command: "true"
               context:
                 - build
-            - check: the kubernetes concept candy's skill entities are present and generated into the marketplace's kubernetes/skills
-              id: charly-kubernetes-present
+            - check: no-op — this drained candy declares no skill node; every kubernetes-family skill lives in the repo that holds the entity it documents
+              id: charly-kubernetes-drained
               context:
                 - build
               command: "true"
-check-k8s-skill:
-    skill:
-        name: check-k8s
-        family: kubernetes
-        owner: charly-kubernetes
-        description: |-
-            Kubernetes cluster-probe declarative check verb — the `kube:` check verb (nodes, pods, ingress, storage class, addon health, apply/delete, arbitrary resource GETs) served out-of-process by candy/plugin-kube (vendored client-go; no external kubectl).
-
-        triggers:
-            - "the `kube:` check verb / Kubernetes cluster probing from a candy/box plan (out-of-process plugin; nodes, pods, ingress, wait-ready, storageclass, addons, apply/delete, raw resource GETs)"
-helm-skill:
-    skill:
-        name: helm
-        family: kubernetes
-        owner: charly-kubernetes
-        description: |-
-            The helm words — the `step:helm-release` install step (a `helm upgrade --install` performed IN-VENUE, returning a `helm uninstall` ReverseOp) and the `verb:helm` declarative release-status assertion, both served out-of-process by candy/plugin-helm; plus the `helm_charts:` deploy field the k8sgen emitter renders.
-
-        triggers:
-            - "`step:helm-release` / `verb:helm` / installing a Helm chart from a candy plan / the `helm_charts:` deploy field and its kustomize `helmCharts:` emission / the `--enable-helm` apply path"
-kubernetes-skill:
-    skill:
-        name: kubernetes
-        family: kubernetes
-        owner: charly-kubernetes
-        description: |-
-            `charly deploy add`, `charly deploy from-box`, Kustomize manifest generation, cluster profiles, Kubernetes deployments, `deploy:` block in deploy spec, or OCI-label capabilities.
-
